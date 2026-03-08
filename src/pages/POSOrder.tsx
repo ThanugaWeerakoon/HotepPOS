@@ -33,10 +33,14 @@ export function POSOrder({
   const categories: (Category | 'All')[] = [
   'All',
   'Pizza',
-  'Burgers',
-  'Pasta',
-  'Drinks',
-  'Desserts'];
+  'Cocktails',
+  'Mocktails',
+  'Smoothies',
+  'Milkshakes',
+  'Juices',
+  'Soft Drinks',
+  'Desserts'
+  ];
 
   const filteredItems = useMemo(() => {
     return menuItems.filter((item) => {
