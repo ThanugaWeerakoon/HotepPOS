@@ -123,10 +123,10 @@ export function Sidebar({
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-slate-900 dark:text-white truncate">
-                Kamal Perera
+                Chamod
               </p>
               <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
-                Admin
+                Supervisor
               </p>
             </div>
           </div>

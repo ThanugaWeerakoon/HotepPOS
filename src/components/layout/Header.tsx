@@ -1,5 +1,5 @@
 import React from 'react';
-import { MenuIcon, SunIcon, MoonIcon, BellIcon, SearchIcon } from 'lucide-react';
+import { MenuIcon} from 'lucide-react';
 interface HeaderProps {
   title: string;
   isDark: boolean;
@@ -8,8 +8,6 @@ interface HeaderProps {
 }
 export function Header({
   title,
-  isDark,
-  toggleTheme,
   onMenuClick
 }: HeaderProps) {
   return (
@@ -26,33 +24,6 @@ export function Header({
         </h1>
       </div>
 
-      <div className="flex items-center gap-2 lg:gap-4">
-        <div className="hidden md:flex items-center relative">
-          <SearchIcon className="h-4 w-4 absolute left-3 text-slate-400" />
-          <input
-            type="text"
-            placeholder="Search..."
-            className="pl-9 pr-4 py-2 bg-gray-50 dark:bg-slate-800 border-none rounded-lg text-sm focus:ring-2 focus:ring-amber-500 outline-none w-64 text-slate-900 dark:text-white" />
-
-        </div>
-
-        <button
-          onClick={toggleTheme}
-          className="p-2 text-slate-500 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
-          aria-label="Toggle theme">
-
-          {isDark ?
-          <SunIcon className="h-5 w-5" /> :
-
-          <MoonIcon className="h-5 w-5" />
-          }
-        </button>
-
-        <button className="p-2 text-slate-500 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg transition-colors relative">
-          <BellIcon className="h-5 w-5" />
-          <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-rose-500 rounded-full border-2 border-white dark:border-slate-900"></span>
-        </button>
-      </div>
     </header>);
 
 }
