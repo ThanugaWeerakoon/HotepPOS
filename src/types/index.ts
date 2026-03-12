@@ -1,4 +1,19 @@
-export type Category = 'Mocktails' | 'Smoothies' | 'Milkshake' | 'Juice' | 'Soft Drinks';
+export type Category =
+  | 'Mocktails'
+  | 'Smoothies'
+  | 'Milkshake'
+  | 'Juice'
+  | 'Soft Drinks'
+  | 'The Classics'
+  | 'Wines'
+  | 'Beer'
+  | 'Pizza'
+  | 'Add Ons'
+  | 'Tacos'
+  | 'From the Grill'
+  | 'To Share'
+  | 'Salads'
+  | 'Sweets';
 
 export interface MenuItem {
   id: string;
@@ -52,3 +67,19 @@ export interface Discount {
   enabled: boolean;
   itemIds?: string[];
 }
+
+interface MenuForm {
+  name: string;
+  description: string;
+  price: string; // string for input
+  category: Category;
+  available: boolean;
+}
+
+const emptyForm: MenuForm = {
+  name: "",
+  description: "",
+  price: "", // string
+  category: "Mocktails",
+  available: true
+};

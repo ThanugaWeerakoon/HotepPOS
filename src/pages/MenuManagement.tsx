@@ -48,7 +48,17 @@ export default function MenuManagement({
     "Smoothies",
     "Milkshake",
     "Juice",
-    "Soft Drinks"
+    "Soft Drinks",
+    "The Classics",
+    "Wines",
+    "Beer",
+    "Pizza",
+    "Add Ons",
+    "Tacos",
+    "From the Grill",
+    "To Share",
+    "Salads",
+    "Sweets"
   ];
 
 
@@ -121,47 +131,45 @@ export default function MenuManagement({
   };
 
   const handleSave = async () => {
-    if (!form.name.trim() || !form.price) return;
+  if (!form.name.trim() || !form.price) return;
 
-    const itemData = {
-      name: form.name.trim(),
-      description: form.description.trim(),
-      price: parseFloat(form.price) || 0,
-      category: form.category,
-      available: form.available
-    };
-
-    try {
-      if (editingId) {
-
-        await updateDoc(doc(db, "menus", editingId), itemData);
-
-        setMenuItems((prev: MenuItem[]) =>
-          prev.map((item: MenuItem) =>
-            item.id === editingId ? { ...item, ...itemData } : item
-          )
-        );
-
-      } else {
-
-        const docRef = await addDoc(collection(db, "menus"), itemData);
-
-        const newItem: MenuItem = {
-          id: docRef.id,
-          ...itemData
-        };
-
-        setMenuItems((prev: MenuItem[]) => [...prev, newItem]);
-      }
-
-      setIsModalOpen(false);
-      setForm(emptyForm);
-      setEditingId(null);
-
-    } catch (error) {
-      console.error("Error saving item:", error);
-    }
+  const itemData: Omit<MenuItem, 'id'> = {
+    name: form.name.trim(),
+    description: form.description.trim(),
+    price: parseFloat(form.price) || 0, // convert string to number
+    category: form.category,
+    available: form.available
   };
+
+  try {
+    if (editingId) {
+      await updateDoc(doc(db, "menus", editingId), itemData);
+
+      setMenuItems((prev: MenuItem[]) =>
+        prev.map((item) =>
+          item.id === editingId ? { ...item, ...itemData } : item
+        )
+      );
+
+    } else {
+      const docRef = await addDoc(collection(db, "menus"), itemData);
+
+      const newItem: MenuItem = {
+        id: docRef.id,
+        ...itemData
+      };
+
+      setMenuItems((prev: MenuItem[]) => [...prev, newItem]);
+    }
+
+    setIsModalOpen(false);
+    setForm(emptyForm);
+    setEditingId(null);
+
+  } catch (error) {
+    console.error("Error saving item:", error);
+  }
+};
 
   return (
     <div className="p-4 lg:p-8 max-w-7xl mx-auto space-y-6">

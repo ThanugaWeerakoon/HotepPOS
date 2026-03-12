@@ -1,25 +1,36 @@
 import React, { useState } from 'react';
+import { db } from "../../firebase";
+import {
+  updateDoc,
+  doc,
+} from "firebase/firestore";
 import { Order } from '../types';
 import { SearchIcon, PrinterIcon } from 'lucide-react';
 import { Receipt } from '../components/ui/Receipt';
 interface OrderHistoryProps {
   orders: Order[];
-  setOrders: React.Dispatch<React.SetStateAction<Order[]>>;
+  setOrders: React.Dispatch<React.SetStateAction<Order[]>>; 
 }
-export function OrderHistory({ orders }: OrderHistoryProps) {
+export function OrderHistory({ orders, setOrders }: OrderHistoryProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<
     'All' | 'Completed' | 'Refunded'>(
     'All');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const filteredOrders = orders.filter((order) => {
-    const matchesSearch = order.id.
-    toLowerCase().
-    includes(searchQuery.toLowerCase());
+const [editingOrder, setEditingOrder] = useState<Order | null>(null);
+const filteredOrders = [...orders]
+  .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+  .filter((order) => {
+    const matchesSearch = order.id
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
+
     const matchesStatus =
-    statusFilter === 'All' || order.status === statusFilter;
+      statusFilter === "All" || order.status === statusFilter;
+
     return matchesSearch && matchesStatus;
   });
+
   const formatCurrency = (amount: number) =>
   `LKR ${amount.toLocaleString('en-LK', {
     minimumFractionDigits: 2
@@ -100,21 +111,109 @@ export function OrderHistory({ orders }: OrderHistoryProps) {
                       {order.status}
                     </span>
                   </td>
-                  <td className="p-4 text-right space-x-2">
-                    <button
-                    onClick={() => setSelectedOrder(order)}
-                    className="p-2 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-500/10 rounded-lg transition-colors min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
-                    title="View Receipt">
+                              <td className="p-4 text-right space-x-2">
+                <button
+                  onClick={() => setSelectedOrder(order)}
+                  className="p-2 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-500/10 rounded-lg transition-colors min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
+                  title="View Receipt"
+                >
+                  <PrinterIcon className="h-4 w-4" />
+                </button>
 
-                      <PrinterIcon className="h-4 w-4" />
-                    </button>
-                   
-                  </td>
+                <button
+                  onClick={() => setEditingOrder(order)}
+                  className="p-2 text-amber-600 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-500/10 rounded-lg transition-colors min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
+                  title="Edit Order"
+                >
+                  ✏️
+                </button>
+              </td>
                 </tr>
+                
               )}
             </tbody>
           </table>
+          {editingOrder && (
+  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+    <div className="bg-white dark:bg-slate-800 rounded-xl p-6 w-full max-w-md space-y-4">
+      <div className="flex justify-between items-center">
+        <h2 className="text-lg font-semibold">
+          Edit Order {editingOrder.id}
+        </h2>
+        <button onClick={() => setEditingOrder(null)}>✖️</button>
+      </div>
+
+      {/* Example editable fields */}
+      <label className="block text-sm font-medium">Table Number / Takeaway</label>
+      {!editingOrder.isTakeaway && (
+     <input
+          type="text" // use text, not number
+          value={editingOrder.tableNumber || ""}
+          onChange={(e) =>
+            setEditingOrder({
+              ...editingOrder,
+              tableNumber: e.target.value, // now it's string
+            })
+          }
+          className="w-full border rounded-lg p-2 dark:bg-slate-900"
+        />
+      )}
+      <label className="block text-sm font-medium">Status</label>
+      <select
+        value={editingOrder.status}
+        onChange={(e) =>
+          setEditingOrder({
+            ...editingOrder,
+            status: e.target.value as Order["status"],
+          })
+        }
+        className="w-full border rounded-lg p-2 dark:bg-slate-900"
+      >
+        <option value="Pending">Pending</option>
+        <option value="Completed">Completed</option>
+        <option value="Refunded">Refunded</option>
+      </select>
+
+      {/* Save button */}
+      <div className="flex justify-end gap-3 pt-2">
+        <button
+          onClick={() => setEditingOrder(null)}
+          className="px-4 py-2 border rounded-lg"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={async () => {
+            if (!editingOrder) return;
+            // Update Firestore
+            try {
+              await updateDoc(doc(db, "orders", editingOrder.id), {
+                tableNumber: editingOrder.tableNumber,
+                status: editingOrder.status,
+              });
+
+              // Update local state
+              setOrders((prev) =>
+                prev.map((o) =>
+                  o.id === editingOrder.id ? editingOrder : o
+                )
+              );
+
+              setEditingOrder(null);
+            } catch (error) {
+              console.error("Error updating order:", error);
+            }
+          }}
+          className="px-4 py-2 bg-amber-500 text-white rounded-lg"
+        >
+          Save
+        </button>
+      </div>
+    </div>
+  </div>
+)}
         </div>
+        
       </div>
 
       {selectedOrder &&
