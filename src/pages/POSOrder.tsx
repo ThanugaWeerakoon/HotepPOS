@@ -27,6 +27,9 @@ export function POSOrder({
   onPlaceOrder,
   editingOrder: propEditingOrder,
 }: POSOrderProps) {
+  // SPLIT BILL
+  const [showSplitModal, setShowSplitModal] = useState(false);
+  const [splitQty, setSplitQty] = useState<Record<string, number>>({});
   const [activeCategory, setActiveCategory] = useState<Category | "All">("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -198,6 +201,69 @@ export function POSOrder({
     setTableName("");
     setShowSavePopup(false);
   };
+
+  const handleSplitOrder = () => {
+  if (cart.length === 0) return;
+
+  const bill1: CartItem[] = [];
+  const bill2: CartItem[] = [];
+
+  cart.forEach((item) => {
+    const qty = splitQty[item.id] || 0;
+
+    if (qty > 0) {
+      bill1.push({ ...item, quantity: qty });
+    }
+
+    if (item.quantity - qty > 0) {
+      bill2.push({
+        ...item,
+        quantity: item.quantity - qty,
+      });
+    }
+  });
+
+  if (bill1.length === 0 || bill2.length === 0) {
+    alert("Invalid split quantities");
+    return;
+  }
+
+  const createOrder = (items: CartItem[]) => {
+    const sub = items.reduce((s, i) => s + i.price * i.quantity, 0);
+
+    const discount = selectedDiscountId
+      ? discountAmount * (sub / subtotal)
+      : 0;
+
+    const tax = serviceChargeEnabled ? (sub - discount) * 0.1 : 0;
+
+    return {
+      id: `ORD-${Math.floor(Math.random() * 10000)}`,
+      items,
+      subtotal: sub,
+      discount,
+      tax,
+      total: sub - discount + tax,
+      paymentMethod: "Cash",
+      isTakeaway,
+      tableNumber: isTakeaway ? undefined : tableName,
+      status: "Pending",
+      date: new Date().toISOString(),
+      cashier: "Chamod",
+    } as Omit<Order, "firestoreId">;
+  };
+
+  const order1 = createOrder(bill1);
+  const order2 = createOrder(bill2);
+
+  onPlaceOrder(order1);
+  onPlaceOrder(order2);
+
+  setCart([]);
+  setSplitQty({});
+  setShowSplitModal(false);
+};
+
   const filteredItems = useMemo(() => {
     return menuItems.filter((item) => {
       const matchesCategory =
@@ -434,7 +500,14 @@ export function POSOrder({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3">
+            <button
+              onClick={() => setShowSplitModal(true)}
+              disabled={cart.length === 0}
+              className="flex w-full items-center justify-center gap-1 bg-purple-500 hover:bg-purple-600 disabled:bg-purple-500/50 text-white p-3 rounded-xl font-medium transition-colors min-h-[64px]"
+            >
+              Split
+            </button>
             <button
               onClick={() => setShowSavePopup(true)}
               disabled={cart.length === 0}
@@ -472,6 +545,7 @@ export function POSOrder({
                     >
                       Save Order
                     </button>
+                    
                   </div>
                 </div>
               </div>
@@ -494,6 +568,54 @@ export function POSOrder({
           onClose={() => setCompletedOrder(null)}
         />
       )}
+
+
+      {showSplitModal && (
+  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+    <div className="bg-white dark:bg-slate-800 p-6 rounded-xl w-96 space-y-4">
+      <h2 className="text-lg font-bold">Split Bill</h2>
+
+      {cart.map((item) => (
+        <div key={item.id} className="flex justify-between items-center">
+          <span>
+            {item.name} ({item.quantity})
+          </span>
+
+          <input
+            type="number"
+            min={0}
+            max={item.quantity}
+            value={splitQty[item.id] || 0}
+            onChange={(e) =>
+              setSplitQty({
+                ...splitQty,
+                [item.id]: Number(e.target.value),
+              })
+            }
+            className="w-16 border border-gray-300 dark:border-slate-600 rounded px-2 py-1
+            bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
+          />
+        </div>
+      ))}
+
+      <div className="flex justify-end gap-2">
+        <button
+          onClick={() => setShowSplitModal(false)}
+          className="px-4 py-2 bg-gray-200 rounded dark:bg-red-600"
+        >
+          Cancel
+        </button>
+
+        <button
+          onClick={handleSplitOrder}
+          className="px-4 py-2 bg-purple-500 text-white rounded"
+        >
+          Split Bill
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 }
