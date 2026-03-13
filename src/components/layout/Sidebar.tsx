@@ -15,6 +15,8 @@ interface SidebarProps {
   isMobileOpen: boolean;
   setIsMobileOpen: (isOpen: boolean) => void;
 }
+import logo from "../../../assets/Logo.png";
+
 export function Sidebar({
   currentPage,
   setCurrentPage,
@@ -85,7 +87,11 @@ export function Sidebar({
         {/* Logo Area */}
         <div className="h-16 flex items-center px-6 border-b border-gray-200 dark:border-slate-800">
           <div className="flex items-center gap-3 text-amber-500">
-            <PizzaIcon className="h-8 w-8" />
+             <img 
+                src={logo} 
+                alt="CRUST Logo"
+                className="h-12 w-12 object-contain filter brightness-0 invert sepia hue-rotate-[20deg] saturate-[600%]"
+              />
             <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
               CRUST
             </span>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Order } from '../../types';
 import { PrinterIcon, XIcon, PizzaIcon } from 'lucide-react';
+import logo from "../../../assets/Logo.png";
 
 interface ReceiptProps {
   order: Omit<Order, "firestoreId">;
@@ -38,7 +39,11 @@ export function Receipt({ order, onClose }: ReceiptProps) {
 
           <div className="text-center mb-6">
             <div className="flex justify-center mb-2">
-              <PizzaIcon className="h-10 w-10 text-slate-900" />
+               <img 
+                src={logo} 
+                alt="CRUST Logo"
+                className="h-14 w-14 object-contain"
+              />
             </div>
             <h1 className="text-2xl font-bold uppercase tracking-widest">
               CRUST

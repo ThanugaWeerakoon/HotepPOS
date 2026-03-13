@@ -178,7 +178,7 @@ export function POSOrder({
       ...(selectedDiscountId ? { discountId: selectedDiscountId } : {}),
       total,
 
-      paymentMethod: "Saved", // not paid yet
+      paymentMethod: "Cash", 
       isTakeaway,
 
       tableNumber: isTakeaway ? undefined : tableName,
