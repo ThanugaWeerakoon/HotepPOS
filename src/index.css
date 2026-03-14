@@ -15,3 +15,33 @@
 }
 
 
+@media print {
+  body {
+    margin: 0;
+    padding: 0;
+  }
+
+  .print-area {
+    width: 80mm;           /* Match XP-80T width */
+    max-width: 80mm;
+    margin: 0 auto;        /* Centers the receipt */
+    padding: 2mm 2mm 2mm 2mm;
+    box-sizing: border-box;
+    background: white;
+    color: black;
+  }
+
+  @page {
+    size: 80mm auto;
+    margin: 0;
+  }
+
+  .print\:hidden {
+    display: none !important;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+}
