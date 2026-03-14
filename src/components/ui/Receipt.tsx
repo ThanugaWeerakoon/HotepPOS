@@ -8,9 +8,44 @@ interface ReceiptProps {
   onClose: () => void;
 }
 export function Receipt({ order, onClose }: ReceiptProps) {
-  const handlePrint = () => {
-    window.print();
-  };
+ const handlePrint = () => {
+  // ESC/POS alignment commands
+  const ESC = "\x1b";
+  const GS = "\x1d";
+
+  // Start building the receipt string
+  let rawbtReceipt = "";
+
+  // Centered logo/text
+  rawbtReceipt += ESC + "a" + "\x01"; // center
+  rawbtReceipt += "      CRUST\n"; // your shop name
+  rawbtReceipt += ESC + "a" + "\x00"; // left align
+  rawbtReceipt += `Order ID: ${order.id}\n`;
+  rawbtReceipt += `Date: ${new Date(order.date).toLocaleString()}\n`;
+  rawbtReceipt += `Cashier: ${order.cashier}\n`;
+  rawbtReceipt += `Type: ${order.isTakeaway ? "TAKEAWAY" : `TABLE ${order.tableNumber}`}\n`;
+  rawbtReceipt += "-------------------------------\n";
+
+  // Items
+  order.items.forEach(item => {
+    rawbtReceipt += `${item.quantity} x ${item.name}   ${item.price * item.quantity}\n`;
+    if(item.notes) {
+      rawbtReceipt += `  Note: ${item.notes}\n`;
+    }
+  });
+
+  rawbtReceipt += "-------------------------------\n";
+  rawbtReceipt += `Subtotal: ${order.subtotal}\n`;
+  if(order.discount > 0) rawbtReceipt += `Discount: -${order.discount}\n`;
+  rawbtReceipt += `Service Charge (10%): ${order.tax}\n`;
+  rawbtReceipt += `TOTAL: ${order.total}\n`;
+  rawbtReceipt += `Payment Method: ${order.paymentMethod}\n`;
+  rawbtReceipt += "\nThank you for dining with us!\n\n";
+
+  // Send to RawBT
+  window.open(`rawbt://${encodeURIComponent(rawbtReceipt)}`);
+};
+
   const formatCurrency = (amount: number) => {
     return `LKR ${amount.toLocaleString('en-LK', {
       minimumFractionDigits: 2
