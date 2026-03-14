@@ -48,8 +48,8 @@ export function Receipt({ order, onClose }: ReceiptProps) {
             <h1 className="text-2xl font-bold uppercase tracking-widest">
               CRUST
             </h1>
-            <p className="text-sm text-gray-600">123 Bakery Lane, Colombo 03</p>
-            <p className="text-sm text-gray-600">Tel: 011 234 5678</p>
+            <p className="text-sm text-gray-600">Crust Pizza Ahangama</p>
+            <p className="text-sm text-gray-600">Tel: +94 77 074 7446</p>
           </div>
 
           <div className="border-t border-dashed border-gray-400 py-4 mb-4 text-sm">
