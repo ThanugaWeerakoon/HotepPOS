@@ -8,17 +8,20 @@ interface ReceiptProps {
   onClose: () => void;
 }
 export function Receipt({ order, onClose }: ReceiptProps) {
- const handlePrint = () => {
-  // ESC/POS alignment commands
+const handlePrint = () => {
   const ESC = "\x1b";
   const GS = "\x1d";
 
-  // Start building the receipt string
   let rawbtReceipt = "";
 
-  // Centered logo/text
-  rawbtReceipt += ESC + "a" + "\x01"; // center
-  rawbtReceipt += "      CRUST\n"; // your shop name
+  // Header: centered
+  rawbtReceipt += ESC + "a" + "\x01"; // center align
+  rawbtReceipt += "      CRUST\n"; // store name
+  rawbtReceipt += "Crust Pizza Ahangama\n";
+  rawbtReceipt += "Tel: +94 77 074 7446\n";
+  rawbtReceipt += "\n";
+
+  // Left-align order info
   rawbtReceipt += ESC + "a" + "\x00"; // left align
   rawbtReceipt += `Order ID: ${order.id}\n`;
   rawbtReceipt += `Date: ${new Date(order.date).toLocaleString()}\n`;
@@ -26,26 +29,35 @@ export function Receipt({ order, onClose }: ReceiptProps) {
   rawbtReceipt += `Type: ${order.isTakeaway ? "TAKEAWAY" : `TABLE ${order.tableNumber}`}\n`;
   rawbtReceipt += "-------------------------------\n";
 
-  // Items
+  // Items table
   order.items.forEach(item => {
-    rawbtReceipt += `${item.quantity} x ${item.name}   ${item.price * item.quantity}\n`;
+    const qty = item.quantity.toString().padEnd(3, " ");
+    const name = item.name.padEnd(20, " ");
+    const amount = (item.price * item.quantity).toFixed(2).padStart(7, " ");
+    rawbtReceipt += `${qty} ${name}${amount}\n`;
     if(item.notes) {
       rawbtReceipt += `  Note: ${item.notes}\n`;
     }
   });
 
   rawbtReceipt += "-------------------------------\n";
-  rawbtReceipt += `Subtotal: ${order.subtotal}\n`;
-  if(order.discount > 0) rawbtReceipt += `Discount: -${order.discount}\n`;
-  rawbtReceipt += `Service Charge (10%): ${order.tax}\n`;
-  rawbtReceipt += `TOTAL: ${order.total}\n`;
-  rawbtReceipt += `Payment Method: ${order.paymentMethod}\n`;
-  rawbtReceipt += "\nThank you for dining with us!\n\n";
+
+  // Totals
+  rawbtReceipt += `Subtotal: ${order.subtotal.toFixed(2)}\n`;
+  if(order.discount > 0) rawbtReceipt += `Discount: -${order.discount.toFixed(2)}\n`;
+  rawbtReceipt += `Service Charge (10%): ${order.tax.toFixed(2)}\n`;
+  rawbtReceipt += `TOTAL: ${order.total.toFixed(2)}\n`;
+  rawbtReceipt += `Payment Method: ${order.paymentMethod}\n\n`;
+
+  // Footer: centered
+  rawbtReceipt += ESC + "a" + "\x01"; // center
+  rawbtReceipt += "Thank you for dining with us!\n";
+  rawbtReceipt += "Please come again.\n\n\n";
 
   // Send to RawBT
   window.open(`rawbt://${encodeURIComponent(rawbtReceipt)}`);
 };
-
+  
   const formatCurrency = (amount: number) => {
     return `LKR ${amount.toLocaleString('en-LK', {
       minimumFractionDigits: 2
