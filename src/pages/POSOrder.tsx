@@ -115,35 +115,37 @@ export function POSOrder({
 
   // ---------------- Checkout ----------------
   const handleCheckout = (method: "Cash" | "Card" | "Online") => {
-    if (cart.length === 0) return;
+  if (cart.length === 0) return;
 
-    const orderData: Omit<Order, "firestoreId"> = {
-      id:
-        propEditingOrder?.id ||
-        `ORD-${Math.floor(Math.random() * 10000)
-          .toString()
-          .padStart(4, "0")}`,
-      items: [...cart],
-      subtotal,
-      tax,
-      discount: discountAmount,
-      ...(selectedDiscountId ? { discountId: selectedDiscountId } : {}), // ← only include if set
-      total,
-      paymentMethod: method,
-      isTakeaway,
-      tableNumber: isTakeaway ? undefined : tableNumber,
-      status: propEditingOrder ? propEditingOrder.status : "Completed", // if editing, keep status. If new order, mark as Completed
-      date: new Date().toISOString(),
-      cashier: "Chamod",
-    };
+  const orderData: Omit<Order, "firestoreId"> = {
+    id:
+      propEditingOrder?.id ||
+      `ORD-${Math.floor(Math.random() * 10000)
+        .toString()
+        .padStart(4, "0")}`,
+    items: [...cart],
+    subtotal,
+    tax,
+    discount: discountAmount,
+    ...(selectedDiscountId ? { discountId: selectedDiscountId } : {}),
+    total,
+    paymentMethod: method,
+    isTakeaway,
+    tableNumber: isTakeaway ? undefined : tableNumber,
 
-    // Call App.tsx handler
-    onPlaceOrder(orderData, propEditingOrder?.firestoreId);
+    // ✅ Always mark as completed when checkout
+    status: "Completed",
 
-    setCompletedOrder(orderData);
-    setCart([]);
-    setSelectedDiscountId("");
+    date: new Date().toISOString(),
+    cashier: "Chamod",
   };
+
+  onPlaceOrder(orderData, propEditingOrder?.firestoreId);
+
+  setCompletedOrder(orderData);
+  setCart([]);
+  setSelectedDiscountId("");
+};
 
   const categories: (Category | "All")[] = [
     "All",
@@ -291,21 +293,21 @@ export function POSOrder({
               className="w-full pl-10 pr-4 py-3 bg-gray-100 dark:bg-slate-800 border-none rounded-xl text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 outline-none"
             />
           </div>
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setActiveCategory(cat)}
-                className={`px-6 py-3 rounded-full font-medium whitespace-nowrap min-h-[44px] transition-colors ${
-                  activeCategory === cat
-                    ? "bg-amber-500 text-white shadow-md"
-                    : "bg-gray-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-700"
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
+            <div className="grid grid-cols-4 gap-2 pb-2">
+        {categories.map((cat) => (
+          <button
+            key={cat}
+            onClick={() => setActiveCategory(cat)}
+            className={`px-3 py-3 rounded-xl font-medium text-sm min-h-[44px] transition-colors ${
+              activeCategory === cat
+                ? "bg-amber-500 text-white shadow-md"
+                : "bg-gray-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-700"
+            }`}
+          >
+            {cat}
+          </button>
+        ))}
+      </div>
         </div>
 
         {/* Menu Grid */}

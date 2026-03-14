@@ -18,6 +18,7 @@ interface OrderHistoryProps {
 
 
 export function OrderHistory({ orders, setOrders , onEditOrder }: OrderHistoryProps) {
+  const [selectedOrders, setSelectedOrders] = useState<Order[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<
     'All' | 'Completed' | 'Refunded'>(
@@ -43,6 +44,45 @@ const filteredOrders = [...orders]
   })}`;
 
 const navigate = useNavigate();
+
+const toggleOrderSelection = (order: Order) => {
+  setSelectedOrders((prev) => {
+    const exists = prev.find((o) => o.firestoreId === order.firestoreId);
+
+    if (exists) {
+      return prev.filter((o) => o.firestoreId !== order.firestoreId);
+    } else {
+      return [...prev, order];
+    }
+  });
+};
+
+const mergeBills = () => {
+  if (selectedOrders.length < 2) {
+    alert("Select at least 2 orders to merge");
+    return;
+  }
+
+  const mergedItems = selectedOrders.flatMap((o) => o.items);
+
+  const subtotal = selectedOrders.reduce((sum, o) => sum + o.subtotal, 0);
+  const tax = selectedOrders.reduce((sum, o) => sum + o.tax, 0);
+  const discount = selectedOrders.reduce((sum, o) => sum + o.discount, 0);
+  const total = selectedOrders.reduce((sum, o) => sum + o.total, 0);
+
+  const mergedOrder: Order = {
+    ...selectedOrders[0],
+    id: `MERGED-${Date.now()}`,
+    items: mergedItems,
+    subtotal,
+    tax,
+    discount,
+    total,
+    date: new Date().toISOString(),
+  };
+
+  setSelectedOrder(mergedOrder);
+};
 
 
   return (
@@ -75,11 +115,21 @@ const navigate = useNavigate();
         </div>
       </div>
 
+        {selectedOrders.length > 1 && (
+          <button
+            onClick={mergeBills}
+            className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg"
+          >
+            Merge Bills ({selectedOrders.length})
+          </button>
+        )}
+
       <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-gray-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-sm border-b border-gray-200 dark:border-slate-700">
+               <th className="p-4">Select</th>
                 <th className="p-4 font-medium">Order ID</th>
                 <th className="p-4 font-medium">Date & Time</th>
                 <th className="p-4 font-medium">Type</th>
@@ -88,15 +138,32 @@ const navigate = useNavigate();
                 <th className="p-4 font-medium text-right">Actions</th>
               </tr>
             </thead>
+            
             <tbody className="divide-y divide-gray-100 dark:divide-slate-700">
+              
               {filteredOrders.map((order) =>
               <tr
                 key={order.id}
                 className="hover:bg-gray-50 dark:hover:bg-slate-800/50 transition-colors">
+               <td className="p-4">
+                <button
+                  onClick={() => toggleOrderSelection(order)}
+                  className={`w-12 h-12 rounded-lg flex items-center justify-center text-lg font-bold transition-colors
+                    ${
+                      selectedOrders.some((o) => o.firestoreId === order.firestoreId)
+                        ? "bg-emerald-500 text-white"
+                        : "bg-gray-200 dark:bg-slate-700 text-slate-700 dark:text-white"
+                    }
+                  `}
+                >
+                  {selectedOrders.some((o) => o.firestoreId === order.firestoreId) ? "✓" : "+"}
+                </button>
+              </td>
 
                   <td className="p-4 font-medium text-slate-900 dark:text-white">
                     {order.id}
                   </td>
+                  
                   <td className="p-4 text-sm text-slate-600 dark:text-slate-300">
                     {new Date(order.date).toLocaleString()}
                   </td>
