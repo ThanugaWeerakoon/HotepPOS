@@ -35,8 +35,8 @@ const handlePrint = () => {
           </button>
         </div>
 
-        <div
-  className="print-area overflow-y-auto p-2 bg-white text-black"
+      <div
+  className="print-area p-2 bg-white text-black"
   id="printable-receipt"
 >
 
