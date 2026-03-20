@@ -115,37 +115,37 @@ export function POSOrder({
 
   // ---------------- Checkout ----------------
   const handleCheckout = (method: "Cash" | "Card" | "Online") => {
-  if (cart.length === 0) return;
+    if (cart.length === 0) return;
 
-  const orderData: Omit<Order, "firestoreId"> = {
-    id:
-      propEditingOrder?.id ||
-      `ORD-${Math.floor(Math.random() * 10000)
-        .toString()
-        .padStart(4, "0")}`,
-    items: [...cart],
-    subtotal,
-    tax,
-    discount: discountAmount,
-    ...(selectedDiscountId ? { discountId: selectedDiscountId } : {}),
-    total,
-    paymentMethod: method,
-    isTakeaway,
-    tableNumber: isTakeaway ? undefined : tableNumber,
+    const orderData: Omit<Order, "firestoreId"> = {
+      id:
+        propEditingOrder?.id ||
+        `ORD-${Math.floor(Math.random() * 10000)
+          .toString()
+          .padStart(4, "0")}`,
+      items: [...cart],
+      subtotal,
+      tax,
+      discount: discountAmount,
+      ...(selectedDiscountId ? { discountId: selectedDiscountId } : {}),
+      total,
+      paymentMethod: method,
+      isTakeaway,
+      tableNumber: isTakeaway ? undefined : tableNumber,
 
-    // ✅ Always mark as completed when checkout
-    status: "Completed",
+      // ✅ Always mark as completed when checkout
+      status: "Completed",
 
-    date: new Date().toISOString(),
-    cashier: "Chamod",
+      date: new Date().toISOString(),
+      cashier: "Chamod",
+    };
+
+    onPlaceOrder(orderData, propEditingOrder?.firestoreId);
+
+    setCompletedOrder(orderData);
+    setCart([]);
+    setSelectedDiscountId("");
   };
-
-  onPlaceOrder(orderData, propEditingOrder?.firestoreId);
-
-  setCompletedOrder(orderData);
-  setCart([]);
-  setSelectedDiscountId("");
-};
 
   const categories: (Category | "All")[] = [
     "Add Ons",
@@ -181,7 +181,7 @@ export function POSOrder({
       ...(selectedDiscountId ? { discountId: selectedDiscountId } : {}),
       total,
 
-      paymentMethod: "Cash", 
+      paymentMethod: "Cash",
       isTakeaway,
 
       tableNumber: isTakeaway ? undefined : tableName,
@@ -203,66 +203,66 @@ export function POSOrder({
   };
 
   const handleSplitOrder = () => {
-  if (cart.length === 0) return;
+    if (cart.length === 0) return;
 
-  const bill1: CartItem[] = [];
-  const bill2: CartItem[] = [];
+    const bill1: CartItem[] = [];
+    const bill2: CartItem[] = [];
 
-  cart.forEach((item) => {
-    const qty = splitQty[item.id] || 0;
+    cart.forEach((item) => {
+      const qty = splitQty[item.id] || 0;
 
-    if (qty > 0) {
-      bill1.push({ ...item, quantity: qty });
+      if (qty > 0) {
+        bill1.push({ ...item, quantity: qty });
+      }
+
+      if (item.quantity - qty > 0) {
+        bill2.push({
+          ...item,
+          quantity: item.quantity - qty,
+        });
+      }
+    });
+
+    if (bill1.length === 0 || bill2.length === 0) {
+      alert("Invalid split quantities");
+      return;
     }
 
-    if (item.quantity - qty > 0) {
-      bill2.push({
-        ...item,
-        quantity: item.quantity - qty,
-      });
-    }
-  });
+    const createOrder = (items: CartItem[]) => {
+      const sub = items.reduce((s, i) => s + i.price * i.quantity, 0);
 
-  if (bill1.length === 0 || bill2.length === 0) {
-    alert("Invalid split quantities");
-    return;
-  }
+      const discount = selectedDiscountId
+        ? discountAmount * (sub / subtotal)
+        : 0;
 
-  const createOrder = (items: CartItem[]) => {
-    const sub = items.reduce((s, i) => s + i.price * i.quantity, 0);
+      const tax = serviceChargeEnabled ? (sub - discount) * 0.1 : 0;
 
-    const discount = selectedDiscountId
-      ? discountAmount * (sub / subtotal)
-      : 0;
+      return {
+        id: `ORD-${Math.floor(Math.random() * 10000)}`,
+        items,
+        subtotal: sub,
+        discount,
+        tax,
+        total: sub - discount + tax,
+        paymentMethod: "Cash",
+        isTakeaway,
+        tableNumber: isTakeaway ? undefined : tableName,
+        status: "Pending",
+        date: new Date().toISOString(),
+        cashier: "Chamod",
+      } as Omit<Order, "firestoreId">;
+    };
 
-    const tax = serviceChargeEnabled ? (sub - discount) * 0.1 : 0;
+    const order1 = createOrder(bill1);
+    const order2 = createOrder(bill2);
 
-    return {
-      id: `ORD-${Math.floor(Math.random() * 10000)}`,
-      items,
-      subtotal: sub,
-      discount,
-      tax,
-      total: sub - discount + tax,
-      paymentMethod: "Cash",
-      isTakeaway,
-      tableNumber: isTakeaway ? undefined : tableName,
-      status: "Pending",
-      date: new Date().toISOString(),
-      cashier: "Chamod",
-    } as Omit<Order, "firestoreId">;
+    onPlaceOrder(order1);
+    onPlaceOrder(order2);
+
+    setCart([]);
+    setSplitQty({});
+    setShowSplitModal(false);
   };
-
-  const order1 = createOrder(bill1);
-  const order2 = createOrder(bill2);
-
-  onPlaceOrder(order1);
-  onPlaceOrder(order2);
-
-  setCart([]);
-  setSplitQty({});
-  setShowSplitModal(false);
-};
 
   const filteredItems = useMemo(() => {
     return menuItems.filter((item) => {
@@ -291,21 +291,21 @@ export function POSOrder({
               className="w-full pl-10 pr-4 py-3 bg-gray-100 dark:bg-slate-800 border-none rounded-xl text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 outline-none"
             />
           </div>
-<div className="flex gap-2 pb-2 overflow-x-auto scrollbar-none">
-  {categories.map((cat) => (
-    <button
-      key={cat}
-      onClick={() => setActiveCategory(cat)}
-      className={`flex-shrink-0 px-3 py-2 rounded-xl font-medium text-sm min-h-[44px] max-w-[100px] text-center break-words transition-colors ${
-        activeCategory === cat
-          ? "bg-amber-500 text-white shadow-md"
-          : "bg-gray-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-700"
-      }`}
-    >
-      {cat}
-    </button>
-  ))}
-</div>
+          <div className="flex gap-2 pb-2 overflow-x-auto scrollbar-none">
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setActiveCategory(cat)}
+                className={`flex-shrink-0 px-3 py-2 rounded-xl font-medium text-sm min-h-[44px] max-w-[100px] text-center break-words transition-colors ${
+                  activeCategory === cat
+                    ? "bg-amber-500 text-white shadow-md"
+                    : "bg-gray-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-700"
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Menu Grid */}
@@ -366,7 +366,7 @@ export function POSOrder({
             Takeaway
           </button>
         </div>
-  
+
         {/* Cart Items */}
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
           {cart.length === 0 ? (
@@ -526,7 +526,6 @@ export function POSOrder({
                     >
                       Save Order
                     </button>
-                    
                   </div>
                 </div>
               </div>
@@ -550,53 +549,52 @@ export function POSOrder({
         />
       )}
 
-
       {showSplitModal && (
-  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-    <div className="bg-white dark:bg-slate-800 p-6 rounded-xl w-96 space-y-4">
-      <h2 className="text-lg font-bold">Split Bill</h2>
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-slate-800 p-6 rounded-xl w-96 space-y-4">
+            <h2 className="text-lg font-bold">Split Bill</h2>
 
-      {cart.map((item) => (
-        <div key={item.id} className="flex justify-between items-center">
-          <span>
-            {item.name} ({item.quantity})
-          </span>
+            {cart.map((item) => (
+              <div key={item.id} className="flex justify-between items-center">
+                <span>
+                  {item.name} ({item.quantity})
+                </span>
 
-          <input
-            type="number"
-            min={0}
-            max={item.quantity}
-            value={splitQty[item.id] || 0}
-            onChange={(e) =>
-              setSplitQty({
-                ...splitQty,
-                [item.id]: Number(e.target.value),
-              })
-            }
-            className="w-16 border border-gray-300 dark:border-slate-600 rounded px-2 py-1
+                <input
+                  type="number"
+                  min={0}
+                  max={item.quantity}
+                  value={splitQty[item.id] || 0}
+                  onChange={(e) =>
+                    setSplitQty({
+                      ...splitQty,
+                      [item.id]: Number(e.target.value),
+                    })
+                  }
+                  className="w-16 border border-gray-300 dark:border-slate-600 rounded px-2 py-1
             bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
-          />
+                />
+              </div>
+            ))}
+
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setShowSplitModal(false)}
+                className="px-4 py-2 bg-gray-200 rounded dark:bg-red-600"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={handleSplitOrder}
+                className="px-4 py-2 bg-purple-500 text-white rounded"
+              >
+                Split Bill
+              </button>
+            </div>
+          </div>
         </div>
-      ))}
-
-      <div className="flex justify-end gap-2">
-        <button
-          onClick={() => setShowSplitModal(false)}
-          className="px-4 py-2 bg-gray-200 rounded dark:bg-red-600"
-        >
-          Cancel
-        </button>
-
-        <button
-          onClick={handleSplitOrder}
-          className="px-4 py-2 bg-purple-500 text-white rounded"
-        >
-          Split Bill
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+      )}
     </div>
   );
 }
